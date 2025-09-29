@@ -1,4 +1,7 @@
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export const verifyToken = (req, res, next) => {
   const token = req.header("Authorization")?.replace("Bearer ", "");
@@ -16,6 +19,12 @@ export const verifyToken = (req, res, next) => {
 export const isEmployer = (req, res, next) => {
   if (req.user.role !== "employer") {
     return res.status(403).json({ error: "Access denied. Employers only." });
+  }
+  next();
+};
+export const isStudent = (req, res, next) => {
+  if (req.user.role !== "student") {
+    return res.status(403).json({ error: "Access denied. Students only." });
   }
   next();
 };

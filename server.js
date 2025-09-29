@@ -1,30 +1,28 @@
-import 'dotenv/config';
 import express from "express";
-import cors from "cors";
-import sequelize from "./config/db.js";
+import dotenv from "dotenv";
+import { sequelize } from "./config/db.js";
 import authRoutes from "./routes/auth.js";
 import jobRoutes from "./routes/jobs.js";
+import applicationRoutes from "./routes/applications.js";
+import User from "./models/User.js";
+import Job from "./models/Job.js";
+import Application from "./models/Application.js";
+
+dotenv.config();
 
 const app = express();
-app.use(cors());
 app.use(express.json());
 
-
-// routes
+// Routes
 app.use("/auth", authRoutes);
 app.use("/jobs", jobRoutes);
-app.get("/", (req, res) => res.send("🚀 UniConnect API running with PostgreSQL"));
+app.use("/applications", applicationRoutes);
+
+// Sync database
+sequelize
+  .sync({ alter: true })
+  .then(() => console.log("✅ PostgreSQL synced"))
+  .catch((err) => console.error("❌ DB sync error:", err));
 
 const PORT = process.env.PORT || 5000;
-
-sequelize.authenticate()
-  .then(() => {
-    console.log("✅ PostgreSQL connected");
-    return sequelize.sync(); // auto-creates tables if missing
-  })
-  .then(() => {
-    app.listen(PORT, () =>
-      console.log(`🚀 Server running at http://localhost:${PORT}`)
-    );
-  })
-  .catch(err => console.error("❌ Database connection error:", err));
+app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));
