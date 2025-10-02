@@ -23,12 +23,9 @@ router.post("/", verifyToken, isEmployer, async (req, res) => {
 
 // Public: view all jobs
 router.get("/", async (req, res) => {
-  try {
-    const jobs = await Job.findAll();
-    res.json(jobs);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  const jobs = await Job.findAll(); // or your DB query
+  res.json(jobs);
 });
+
 
 export default router;
