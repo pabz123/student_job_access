@@ -7,6 +7,9 @@ import applicationRoutes from "./routes/applications.js";
 import User from "./models/User.js";
 import Job from "./models/Job.js";
 import Application from "./models/Application.js";
+import cors from "cors";
+app.use(cors({ origin: "http://localhost:3000", credentials: true })); 
+
 
 dotenv.config();
 
