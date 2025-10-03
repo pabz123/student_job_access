@@ -1,99 +1,74 @@
 import "./App.css";
-import React, { useState, useEffect } from "react";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Jobs from './pages/Jobs';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
+const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-const API = "http://localhost:5000";
-
-function App() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [token, setToken] = useState("");
-  const [jobs, setJobs] = useState([]);
-  const [message, setMessage] = useState("");
-
-  const register = async (e) => {
-    e.preventDefault();
-    const res = await fetch(API + "/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, role: "student" })
-    });
-    const data = await res.json();
-    setMessage(data.message || data.error);
-  };
-
-  const login = async (e) => {
-    e.preventDefault();
-    const res = await fetch(API + "/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
-    if (data.token) {
-      setToken(data.token);
-      setMessage("Login successful");
-    } else {
-      setMessage(data.error);
-    }
-  };
-
-  const fetchJobs = async () => {
-    const res = await fetch(API + "/jobs");
-    const data = await res.json();
-    setJobs(data);
-  };
-
-  const uploadResume = async (e) => {
-    e.preventDefault();
-    const fileInput = document.getElementById("resume");
-    const formData = new FormData();
-    formData.append("resume", fileInput.files[0]);
-    const res = await fetch(API + "/jobs/upload", {
-      method: "POST",
-      body: formData
-    });
-    const data = await res.json();
-    setMessage(data.message || data.error);
-  };
-
-  useEffect(() => {
-    fetchJobs();
-  }, []);
+function Navbar() {
+  const { isAuthenticated, logout, user } = useAuth();
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>UniConnect React Frontend</h2>
+    <nav className="navbar">
+      <div className="navbar-content">
+        <div>
+          <Link to="/" style={{ textDecoration: 'none', color: 'var(--primary-color)', fontSize: '1.5rem', fontWeight: 'bold' }}>
+            UniConnect
+          </Link>
+        </div>
+        <div>
+          {isAuthenticated ? (
+            <>
+              <span style={{ marginRight: '1rem' }}>Welcome, {user?.email}</span>
+              <button className="btn btn-primary" onClick={logout}>Logout</button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="btn btn-primary" style={{ marginRight: '1rem' }}>Login</Link>
+              <Link to="/register" className="btn btn-primary">Register</Link>
+            </>
+          )}
+        </div>
+      </div>
+    </nav>
+  );
+}
 
-      <h3>Register</h3>
-      <form onSubmit={register}>
-        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        <button type="submit">Register</button>
-      </form>
+function PrivateRoute({ children }) {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? children : <Navigate to="/login" />;
+}
 
-      <h3>Login</h3>
-      <form onSubmit={login}>
-        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        <button type="submit">Login</button>
-      </form>
+function App() {
 
-      <h3>Jobs</h3>
-      <ul>
-        {jobs.map((job, idx) => (
-          <li key={idx}>{job.title} - {job.description}</li>
-        ))}
-      </ul>
-
-      <h3>Upload Resume</h3>
-      <form onSubmit={uploadResume}>
-        <input type="file" id="resume" />
-        <button type="submit">Upload</button>
-      </form>
-
-      <p>{message}</p>
-    </div>
+  return (
+    <AuthProvider>
+      <Router>
+        <div className="App">
+          <Navbar />
+          <div className="container">
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route
+                path="/"
+                element={
+                  <PrivateRoute>
+                    <Jobs />
+                  </PrivateRoute>
+                }
+              />
+            </Routes>
+          </div>
+          <ToastContainer position="bottom-right" />
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 
